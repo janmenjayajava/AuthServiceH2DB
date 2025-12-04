@@ -1,0 +1,60 @@
+
+name: Backend CI/CD — Build, Push to ACR, Deploy to Web App
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Build with Maven (package)
+      run: |
+        chmod +x mvnw
+        ./mvnw -B -DskipTests package
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Login to ACR
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+
+    - name: Build and push Docker image to ACR
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ secrets.ACR_LOGIN_SERVER }}/authservice-h2db:${{ github.sha }}
+
+    - name: Set Web App to use image from ACR
+      uses: azure/cli@v1
+      with:
+        azcliversion: 'latest'
+        inlineScript: |
+          az webapp config container set \
+            --name ${{ secrets.AZURE_WEBAPP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --docker-custom-image-name ${{ secrets.ACR_LOGIN_SERVER }}/authservice-h2db:${{ github.sha }} \
+            --docker-registry-server-url https://${{ secrets.ACR_LOGIN_SERVER }}
+
+          az webapp restart --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
+
+    - name: Confirm deployment
+      run: |
+        echo "Deployed image: ${{ secrets.ACR_LOGIN_SERVER }}/authservice-h2db:${{ github.sha }}"
