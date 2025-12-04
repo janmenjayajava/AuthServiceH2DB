@@ -47,8 +47,8 @@ jobs:
     - name: Set Web App to use image from ACR
       uses: azure/cli@v1
       with:
-      azcliversion: 'latest'
-      inlineScript: |
+        azcliversion: 'latest'
+        inlineScript: |
         az webapp config container set \
         --name ${{ secrets.AZURE_WEBAPP_NAME }} \
         --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
