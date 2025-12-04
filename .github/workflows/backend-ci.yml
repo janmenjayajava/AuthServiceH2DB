@@ -49,16 +49,8 @@ jobs:
       with:
         azcliversion: 'latest'
         inlineScript: |
-          az webapp config container set \
-          --name ${{ secrets.AZURE_WEBAPP_NAME }} \
-          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-          --docker-custom-image-name "${{ secrets.ACR_LOGIN_SERVER }}/authservice-h2db:${{ github.sha }}" \
-          --docker-registry-server-url "https://${{ secrets.ACR_LOGIN_SERVER }}" \
-          --docker-registry-server-user "${{ secrets.ACR_USERNAME }}" \
-          --docker-registry-server-password "${{ secrets.ACR_PASSWORD }}"
-
-          az webapp restart --name ${{ secrets.AZURE_WEBAPP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
-
+          az webapp config container set --name "${{ secrets.AZURE_WEBAPP_NAME }}" --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" --docker-custom-image-name "${{ secrets.ACR_LOGIN_SERVER }}/authservice-h2db:${{ github.sha }}" --docker-registry-server-url "https://${{ secrets.ACR_LOGIN_SERVER }}" --docker-registry-server-user "${{ secrets.ACR_USERNAME }}" --docker-registry-server-password "${{ secrets.ACR_PASSWORD }}"
+          az webapp restart --name "${{ secrets.AZURE_WEBAPP_NAME }}" --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}"
 
     - name: Confirm deployment
       run: |
